@@ -37,19 +37,6 @@ def main(in_file, doc):
             continue
         table_write_line(doc, list(variables.values()))
 
-def implies(a, b):
-    a ^= 1
-    return a | b
-
-def equivalence(a, b):
-    if a == b:
-        return 1
-    else:
-        return 0
-
-def negate(a):
-    a ^= 1
-    return a
 
 def init_table(doc, size):
     center = "|".join(["c"]*size)
