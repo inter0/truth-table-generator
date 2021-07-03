@@ -106,7 +106,7 @@ def my_and(a, b):
 def my_or(a, b):
     return a | b
 
-class operatorNode():
+class operationNode():
     def __init__(self, operator, function):
         self.operator = operator
         self.function = function
@@ -128,11 +128,11 @@ class tree():
 
     def __init__(self, formel):
         self.formel = formel
+        self.top_node = self.__generate_tree()
+        self.atomNodes_arr = self.__get_atomNodes()
     
-    def generate_tree(self):
-        self.top_node = self.__generate()
-
-    def __generate(self):
+    #TODO: test this
+    def __generate_tree(self):
         split_formel_arr = split_formel(self.formel)
 
         if split_formel_arr == None:
@@ -141,10 +141,29 @@ class tree():
             else:
                 return atomNode(self.formel, 0)
 
-        node0 = operatorNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
-        subTree1 = tree(split_formel_arr[0])
-        subTree2 = tree(split_formel_arr[2])
-        node0.node1 = subTree1.__generate()
-        node0.node2 = subTree2.__generate()
+        node0 = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
+        node0.node1 = tree(split_formel_arr[0])
+        node0.node2 = tree(split_formel_arr[2])
 
         return node0
+
+    #TODO: test this and check if every atom is in dict
+    def update_values(self, value_dict):
+        for key, new_value in value_dict.items():
+            index = self.atomNodes_arr.index(key)
+            self.atomNodes_arr[index].value = new_value
+
+    #TODO: test this
+    def __get_atomNodes(self):
+        atom_node_arr = []
+
+        if isinstance(self.top_node, atomNode):
+            atom_node_arr.append(self.top_node)
+        else:
+            atomNode1 = self.top_node.node1.__get_atomNodes()
+            atomNode2 = self.top_node.node2.__get_atomNodes()
+            if atomNode1 not in atom_node_arr:
+                atom_node_arr += atomNode1
+            if atomNode2 not in atom_node_arr:
+                atom_node_arr += atomNode2
+        return atom_node_arr
