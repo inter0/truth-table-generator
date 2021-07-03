@@ -4,9 +4,9 @@ formel = "a => ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c )"
 
 formel1 = "( ( ( a \\/ b ) <=> ( -c /\\ d ) ) \\/ c )"
 
-tree = formel_tree.tree(formel)
+t = formel_tree.tree(formel)
 
-node = tree.top_node
+node = t.top_node
 
 
 def print_tree(node):

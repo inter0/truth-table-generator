@@ -1,17 +1,22 @@
 logic_operators = (r"\/", "/\\", "=>", "<=>")
 
 def split_formel(formel):
-    if len(formel) < 3:
-        return None
-
+    formel = remove_outer_brackets(formel)
     split_formel_arr = []
     arr = formel.split(" ")
 
+    #smallest split formel is something like a /\ b
+    #if the length is smaller then 3, then you dont have a left and right term and an operation between them
+    if len(arr) < 3:
+        return None
+    
     if arr[0] != "(":
+        #thats the easy case
         split_formel_arr.append(arr[0])
         split_formel_arr.append(arr[1])
         split_formel_arr.append(my_join(arr[2:], " "))
     else:
+        #find the end of the subterm which the brackets encloses, which is the left term
         bracket = 0
         end_index_of_subterm = 0
         for index, f in enumerate(arr):
@@ -31,6 +36,9 @@ def split_formel(formel):
     return split_formel_arr
 
 def remove_outer_brackets(formel):
+    """
+    |   remove the outermost brackets, if the bracket at the first formel position (formel[0]) closes at the end of the formel (formel[-1])
+    """
     arr = formel.split(" ")
     bracket = 0
     end_index = 0
@@ -50,6 +58,9 @@ def remove_outer_brackets(formel):
         return formel
 
 def my_join(lst, item):
+    """
+    |   same as "".join(lst), just insert item between every lst element
+    """
     result = [item] * (len(lst) * 2 - 1)
     result[0::2] = lst
     return "".join(result)
@@ -115,7 +126,7 @@ class operationNode():
         return self.operator
 
 class atomNode():
-    def __init__(self, atom, value, negated=False):
+    def __init__(self, atom, value, negated):
         self.atom = atom
         self.value = value
         self.negated = negated
@@ -125,45 +136,41 @@ class atomNode():
 
 class tree():
     functions = [my_or, my_and, implies, equivalence, negate]
+    atomNode_arr = []
 
     def __init__(self, formel):
         self.formel = formel
         self.top_node = self.__generate_tree()
-        self.atomNodes_arr = self.__get_atomNodes()
     
-    #TODO: test this
+    #TODO: more testing would be good
     def __generate_tree(self):
         split_formel_arr = split_formel(self.formel)
 
         if split_formel_arr == None:
-            if self.formel[0] == "-":
-                return atomNode(self.formel, 0, True)
+            node = None
+            atomNodes_names_arr = [node.atom for node in tree.atomNode_arr]
+            negated = True if self.formel[0] == "-" else False
+
+            if self.formel in atomNodes_names_arr:
+                index = atomNodes_names_arr.index(self.formel)
+                node = tree.atomNode_arr[index]
             else:
-                return atomNode(self.formel, 0)
+                node = atomNode(self.formel, 0, negated)
+                tree.atomNode_arr.append(node)
+            
+            return node
 
         node0 = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
-        node0.node1 = tree(split_formel_arr[0])
-        node0.node2 = tree(split_formel_arr[2])
+        node0.node1 = tree(split_formel_arr[0]).top_node
+        node0.node2 = tree(split_formel_arr[2]).top_node
 
         return node0
 
     #TODO: test this and check if every atom is in dict
     def update_values(self, value_dict):
+        if len(value_dict) != len(tree.atomNode_arr):
+            raise Exception("Length of value dictionary is not equal ")
+
         for key, new_value in value_dict.items():
             index = self.atomNodes_arr.index(key)
             self.atomNodes_arr[index].value = new_value
-
-    #TODO: test this
-    def __get_atomNodes(self):
-        atom_node_arr = []
-
-        if isinstance(self.top_node, atomNode):
-            atom_node_arr.append(self.top_node)
-        else:
-            atomNode1 = self.top_node.node1.__get_atomNodes()
-            atomNode2 = self.top_node.node2.__get_atomNodes()
-            if atomNode1 not in atom_node_arr:
-                atom_node_arr += atomNode1
-            if atomNode2 not in atom_node_arr:
-                atom_node_arr += atomNode2
-        return atom_node_arr
