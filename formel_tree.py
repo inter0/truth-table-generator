@@ -12,6 +12,7 @@ def split_formel(formel):
     
     if arr[0] != "(":
         #thats the easy case
+        #just get the first atom, the operator after it and the rest is the right subterm
         split_formel_arr.append(arr[0])
         split_formel_arr.append(arr[1])
         split_formel_arr.append(my_join(arr[2:], " "))
@@ -37,7 +38,8 @@ def split_formel(formel):
 
 def remove_outer_brackets(formel):
     """
-    |   remove the outermost brackets, if the bracket at the first formel position (formel[0]) closes at the end of the formel (formel[-1])
+    |   remove the outermost brackets
+    |   if the bracket at the first formel position (formel[0]) closes at the end of the formel (formel[-1])
     """
     arr = formel.split(" ")
     bracket = 0
@@ -65,7 +67,7 @@ def my_join(lst, item):
     result[0::2] = lst
     return "".join(result)
 
-#verify_formel has errors, it states a formel is not valid if an operator like <=> has a subterm like ( a /\ b) before or after it 
+#TODO: verify_formel has errors, it states a formel is not valid if an operator like <=> has a subterm like ( a /\ b) before or after it 
 def verify_formel(formel):
     arr = formel.split(" ")
 
@@ -122,17 +124,18 @@ class operationNode():
         self.operator = operator
         self.function = function
 
+    #TODO: def change this
     def __str__(self):
         return self.operator
 
 class atomNode():
-    def __init__(self, atom, value, negated):
-        self.atom = atom
+    def __init__(self, name, value, negated):
+        self.name = name
         self.value = value
         self.negated = negated
     
     def __str__(self):
-        return self.atom
+        return self.name
 
 class tree():
     functions = [my_or, my_and, implies, equivalence, negate]
@@ -148,7 +151,7 @@ class tree():
 
         if split_formel_arr == None:
             node = None
-            atomNodes_names_arr = [node.atom for node in tree.atomNode_arr]
+            atomNodes_names_arr = tree.__get_atom_names(with_negated=True, sort_arr=False)
             negated = True if self.formel[0] == "-" else False
 
             if self.formel in atomNodes_names_arr:
@@ -161,16 +164,40 @@ class tree():
             return node
 
         node0 = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
-        node0.node1 = tree(split_formel_arr[0]).top_node
-        node0.node2 = tree(split_formel_arr[2]).top_node
+        node0.left_child = tree(split_formel_arr[0]).top_node
+        node0.right_child = tree(split_formel_arr[2]).top_node
 
         return node0
 
-    #TODO: test this and check if every atom is in dict
+    #TODO: test this
     def update_values(self, value_dict):
-        if len(value_dict) != len(tree.atomNode_arr):
-            raise Exception("Length of value dictionary is not equal ")
+        atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=True)
+        
+        #check if lengths match
+        if len(value_dict) != len(atom_names_arr):
+            raise Exception("Length of value dictionary is not equal to number of atoms")
+        
+        #check if every atom of the formel tree is in the new values dictionary
+        for atom_name in atom_names_arr:
+            if atom_name not in list(value_dict.keys()):
+                raise Exception("Given dictionary contains atoms that are not in the formel tree")
 
         for key, new_value in value_dict.items():
             index = self.atomNodes_arr.index(key)
             self.atomNodes_arr[index].value = new_value
+        
+        #TODO: def need to test this
+        for negated_atom in [atom for atom in tree.atomNode_arr if atom.negated]:
+            new_value = negate(value_dict[negated_atom.name[1:]])
+            negated_atom.value = new_value
+        
+    #TODO: test this
+    def __get_atom_names(with_negated=True, sort_arr=False):
+        atom_names_arr = [atom.name for atom in tree.atomNode_arr]
+
+        if not with_negated:
+            for atom in tree.atomNode_arr:
+                if atom.negated:
+                    atom_names_arr.remove(atom.name)
+            
+        return atom_names_arr if not sort_arr else sorted(atom_names_arr)
