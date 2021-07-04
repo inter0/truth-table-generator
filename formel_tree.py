@@ -124,9 +124,9 @@ class operationNode():
         self.operator = operator
         self.function = function
 
-    #TODO: def change this
     def __str__(self):
-        return self.operator
+        #TODO: I am missing some brackets, because I remove the outermost ones with split_formel
+        return str(self.left_child) + " " + self.operator + " " + str(self.right_child)
 
 class atomNode():
     def __init__(self, name, value, negated):
@@ -149,11 +149,13 @@ class tree():
     def __generate_tree(self):
         split_formel_arr = split_formel(self.formel)
 
+        #if formel cant be split more, this is an atom
         if split_formel_arr == None:
             node = None
             atomNodes_names_arr = tree.__get_atom_names(with_negated=True, sort_arr=False)
             negated = True if self.formel[0] == "-" else False
 
+            #check if atom already exists, if it does return already existing atom otherwise create new atomNode
             if self.formel in atomNodes_names_arr:
                 index = atomNodes_names_arr.index(self.formel)
                 node = tree.atomNode_arr[index]
@@ -163,6 +165,8 @@ class tree():
             
             return node
 
+        #create new operationNode and recursively build tree
+        #set childs of this operationNode
         node0 = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
         node0.left_child = tree(split_formel_arr[0]).top_node
         node0.right_child = tree(split_formel_arr[2]).top_node
@@ -201,3 +205,6 @@ class tree():
                     atom_names_arr.remove(atom.name)
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
+    
+    def evaluate(self):
+        pass

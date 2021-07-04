@@ -8,6 +8,9 @@ t = formel_tree.tree(formel)
 
 node = t.top_node
 
+print(node)
+exit()
+
 
 def print_tree(node):
     try:
