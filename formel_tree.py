@@ -174,6 +174,7 @@ class tree():
         return node0
 
     #TODO: test this
+    #I dont know if it would be better if it would be ok if I only submit the changed atoms
     def update_values(self, value_dict):
         atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=True)
         
