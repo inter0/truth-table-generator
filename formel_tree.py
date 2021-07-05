@@ -120,19 +120,34 @@ def my_or(a, b):
     return a | b
 
 class operationNode():
-    def __init__(self, operator, function):
-        self.operator = operator
+    def __init__(self, operation, function):
+        self.operation = operation
         self.function = function
+        self.left_child = None
+        self.right_child = None
+        self.up_to_date_value = False
+        self.string = None
+        self.value = 0
+
+    def get_value(self):
+        if not self.up_to_date_value:
+            self.value = self.function(self.left_child.get_value(), self.right_child.get_value())
+            self.up_to_date_value = True
+        return self.value 
 
     def __str__(self):
-        #TODO: I am missing some brackets, because I remove the outermost ones with split_formel
-        return str(self.left_child) + " " + self.operator + " " + str(self.right_child)
+        if self.string == None:
+            self.string = f"( {str(self.left_child)} {self.operation} {self.right_child} )"
+        return self.string
 
 class atomNode():
     def __init__(self, name, value, negated):
         self.name = name
         self.value = value
         self.negated = negated
+    
+    def get_value(self):
+        return self.value
     
     def __str__(self):
         return self.name
@@ -167,11 +182,11 @@ class tree():
 
         #create new operationNode and recursively build tree
         #set childs of this operationNode
-        node0 = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
-        node0.left_child = tree(split_formel_arr[0]).top_node
-        node0.right_child = tree(split_formel_arr[2]).top_node
+        node = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
+        node.left_child = tree(split_formel_arr[0]).top_node
+        node.right_child = tree(split_formel_arr[2]).top_node
 
-        return node0
+        return node
 
     #TODO: test this
     #I dont know if it would be better if it would be ok if I only submit the changed atoms
@@ -187,14 +202,30 @@ class tree():
             if atom_name not in list(value_dict.keys()):
                 raise Exception("Given dictionary contains atoms that are not in the formel tree")
 
-        for key, new_value in value_dict.items():
-            index = self.atomNodes_arr.index(key)
-            self.atomNodes_arr[index].value = new_value
+        for atom_name, new_value in value_dict.items():
+            node = tree.__get_atomNode_by_name(atom_name)
+            node.value = new_value
         
         #TODO: def need to test this
         for negated_atom in [atom for atom in tree.atomNode_arr if atom.negated]:
             new_value = negate(value_dict[negated_atom.name[1:]])
             negated_atom.value = new_value
+
+        #update operationNodes up_to_date_value to False
+        tree.__update_operationNodes(self.top_node)
+
+    def __get_atomNode_by_name(name):
+        for node in tree.atomNode_arr:
+            if node.name == name:
+                return node
+        return None
+
+    #TODO: test this
+    def __update_operationNodes(node):
+        if isinstance(node, operationNode):
+            node.up_to_date_value = False
+            tree.__update_operationNodes(node.left_child)
+            tree.__update_operationNodes(node.right_child)
         
     #TODO: test this
     def __get_atom_names(with_negated=True, sort_arr=False):
@@ -207,5 +238,16 @@ class tree():
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
     
-    def evaluate(self):
-        pass
+    #TODO: this will definitly fail
+    def evaluate(self, node):
+        if isinstance(node, atomNode):
+            return {str(node): node.value}
+        
+        dict = {str(node): node.value}
+        dict_of_left_child = self.evaluate(node.left_child)
+        dict_of_right_child = self.evaluate(node.right_child)
+
+        dict_of_left_child.update(dict_of_right_child)
+        dict_of_left_child.update(dict)
+
+        return dict_of_left_child
