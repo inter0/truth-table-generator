@@ -157,6 +157,8 @@ class tree():
     atomNode_arr = []
 
     def __init__(self, formel):
+        #if not verify_formel(formel):
+        #   raise Exception("Formel is not a valid formel")
         self.formel = formel
         self.top_node = self.__generate_tree()
     
