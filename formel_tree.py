@@ -41,23 +41,26 @@ def remove_outer_brackets(formel):
     |   remove the outermost brackets
     |   if the bracket at the first formel position (formel[0]) closes at the end of the formel (formel[-1])
     """
-    arr = formel.split(" ")
     bracket = 0
     end_index = 0
 
-    for index, f in enumerate(arr):
-        if f == "(":
-            bracket += 1
-        if f == ")":
-            bracket -= 1
-        if bracket == 0:
-            end_index = index
-            break
+    while True:
+        arr = formel.split(" ")
+        for index, f in enumerate(arr):
+            if f == "(":
+                bracket += 1
+            if f == ")":
+                bracket -= 1
+            if bracket == 0:
+                end_index = index
+                break
 
-    if end_index == len(arr) - 1 and end_index != 0:
-        return formel[2:len(formel) - 2]
-    else:
-        return formel
+        if end_index == len(arr) - 1 and end_index != 0:
+            formel = formel[2:len(formel) - 2]
+        else:
+            break
+        
+    return formel
 
 def my_join(lst, item):
     """
