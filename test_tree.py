@@ -7,6 +7,7 @@ formel3 = "a \/ b /\ c"
 formel4 = "a \/"
 formel5 = "( ( a \/ b ) ) )"
 formel6 = "( -a => b ) \/ ( b <=> c )"
+formel7 = "( c -a => b ) \/ ( b <=> c )"
 
 class testTree(unittest.TestCase):
     def test_splitFormel(self):
@@ -69,8 +70,12 @@ class testTree(unittest.TestCase):
         self.assertFalse(ft.verify_formel(formel4))
         self.assertFalse(ft.verify_formel(formel5))
         self.assertTrue(ft.verify_formel(formel6))
+        self.assertFalse(ft.verify_formel(formel7))
 
     def test_generateTree(self):
+        self.assertRaises(Exception, ft.tree, formel7)
+        self.assertRaises(Exception, ft.tree, formel4)
+
         t3 = ft.tree(formel3)
 
         top_node = t3.top_node

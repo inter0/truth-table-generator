@@ -236,9 +236,8 @@ class tree():
     atomNode_arr = []
 
     def __init__(self, formel):
-        #TODO: create test for this when verify_formel works
-        #if not verify_formel(formel):
-        #   raise Exception("Not a valid formel")
+        if not verify_formel(formel):
+           raise Exception("Not a valid formel")
         self.formel = formel
         self.top_node = self.__generate_tree()
     
