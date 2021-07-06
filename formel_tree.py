@@ -88,12 +88,53 @@ def verify_formel(formel):
     #TODO: subterms before and after a logical operator return false
     for index, f in enumerate(arr):
         if f in logic_operators:
-            if index == 0:
+            if index == 0 or index == len(arr):
                 return False
             if not (is_atom(arr[index - 1]) and is_atom(arr[index + 1])):
                 return False
     return True
-               
+
+def contains_subterm(formel, left_aligned=False, right_aligned=False):
+    arr = formel.split(" ")
+    if left_aligned:
+        if arr[0] != "(":
+            return False
+        else:
+            pass
+    else:
+        pass
+
+def get_subterm_indices(formel, start=None):
+    """
+    |   Returns a tuple with the start and end index of the innermost first subterm after the start index
+    |   if there is no subterm or it does not close end index is set to -1
+    """
+    if start == None:
+        start = 0
+
+    arr = formel.split(" ")
+
+    #move start to first opening bracket
+    while arr[start] != "(":
+        start += 1
+    
+    end_index = 0
+    bracket = 0
+
+    for i in range(start, len(arr)):
+        if arr[i] == "(":
+            bracket += 1
+        elif arr[i] == ")":
+            bracket -= 1
+        if bracket == 0:
+            end_index = i
+            break
+    
+    if end_index == 0:
+        end_index = -1
+        
+    return (start, end_index)
+
 def is_atom(chr):
     atom = True
     if chr in logic_operators:
