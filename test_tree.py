@@ -33,6 +33,7 @@ class testTree(unittest.TestCase):
         self.assertEqual(outer_brackets_removed, "( ( a \/ b ) <=> ( -c /\ d ) ) \/ c")
         nothing_to_do = ft.remove_outer_brackets(formel3)
         self.assertEqual(nothing_to_do, formel3)
+        self.assertEqual(ft.remove_outer_brackets(formel1), formel1)
 
     def test_implies(self):
         self.assertEqual(ft.implies(0, 0), 1)
@@ -62,7 +63,6 @@ class testTree(unittest.TestCase):
         self.assertEqual(ft.my_or(1, 0), 1)
         self.assertEqual(ft.my_or(1, 1), 1)
 
-    @unittest.expectedFailure
     def test_verifyFormel(self):
         self.assertTrue(ft.verify_formel(formel1))
         self.assertTrue(ft.verify_formel(formel2))
@@ -152,7 +152,7 @@ class testTree(unittest.TestCase):
         indices1 = ft.get_subterm_indices(formel1)
         self.assertEqual(indices1, (2, 18))
         indices3 = ft.get_subterm_indices(formel3)
-        self.assertEqual(indices3, (0, -1))
+        self.assertEqual(indices3[1], -1)
 
     def test_updateValues(self):
         pass

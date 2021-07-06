@@ -1,6 +1,11 @@
 logic_operators = (r"\/", "/\\", "=>", "<=>")
 
+#TODO: description for split_formel
 def split_formel(formel):
+    """
+    |   insert description here
+    """
+    #remove unnecessary brackets
     formel = remove_outer_brackets(formel)
     split_formel_arr = []
     arr = formel.split(" ")
@@ -18,16 +23,8 @@ def split_formel(formel):
         split_formel_arr.append(my_join(arr[2:], " "))
     else:
         #find the end of the subterm which the brackets encloses, which is the left term
-        bracket = 0
-        end_index_of_subterm = 0
-        for index, f in enumerate(arr):
-            if f == "(":
-                bracket += 1
-            if f == ")":
-                bracket -= 1
-            if bracket == 0:
-                end_index_of_subterm = index + 1
-                break
+        #assume formel is valid, so I dont have to check if end index of the subterm is -1
+        end_index_of_subterm = get_subterm_indices(formel)[1] + 1
         split_formel_arr.append(my_join(arr[0:end_index_of_subterm], " "))
         split_formel_arr.append(arr[end_index_of_subterm])
         split_formel_arr.append(my_join(arr[end_index_of_subterm + 1:], " "))
@@ -46,20 +43,16 @@ def remove_outer_brackets(formel):
 
     while True:
         arr = formel.split(" ")
-        for index, f in enumerate(arr):
-            if f == "(":
-                bracket += 1
-            if f == ")":
-                bracket -= 1
-            if bracket == 0:
-                end_index = index
-                break
+        indices = get_subterm_indices(formel)
+        #subterm does not close, which means, with the assumption that the formel is valid that all outer brackets are removed
+        if indices[1] == -1:
+            break
 
-        if end_index == len(arr) - 1 and end_index != 0:
+        if indices[0] == 0 and indices[1] == len(arr) - 1:
             formel = formel[2:len(formel) - 2]
         else:
             break
-        
+
     return formel
 
 def my_join(lst, item):
@@ -70,7 +63,6 @@ def my_join(lst, item):
     result[0::2] = lst
     return "".join(result)
 
-#TODO: verify_formel has errors, it states a formel is not valid if an operator like <=> has a subterm like ( a /\ b) before or after it 
 def verify_formel(formel):
     arr = formel.split(" ")
 
@@ -79,8 +71,13 @@ def verify_formel(formel):
     for f in arr:
         if f == "(":
                 bracket += 1
+                continue
         if f == ")":
             bracket -= 1
+            #prevent the case ") ...some stuff... ("
+            if bracket < 0:
+                return False
+
     if bracket != 0:
         return False
 
@@ -90,24 +87,62 @@ def verify_formel(formel):
         if f in logic_operators:
             if index == 0 or index == len(arr):
                 return False
-            if not (is_atom(arr[index - 1]) and is_atom(arr[index + 1])):
+            if not ((is_atom(arr[index - 1]) or contains_valid_subterm(my_join(arr[:index], " "), False))\
+                 and (is_atom(arr[index + 1]) or contains_valid_subterm(my_join(arr[index + 1:], " "), True))):
                 return False
     return True
 
-def contains_subterm(formel, left_aligned=False, right_aligned=False):
+#TODO: this feels bloated
+def contains_valid_subterm(formel, left_aligned):
+    """
+    |   This method checks if the formel contains an aligned valid subterm from start to end
+    |   left_aligned means that the formel must have a valid subterm that starts at formel[start] in order for this method to return true
+    """
     arr = formel.split(" ")
+    valid = True
+
     if left_aligned:
         if arr[0] != "(":
-            return False
+            #subterm is not left aligned
+            valid = False
         else:
-            pass
+            end_index = get_subterm_indices(formel)[1]
+            if end_index == -1:
+                #subterm does not end
+                valid = False
+            else:
+                #check if subterm is valid
+                subterm = my_join(arr[:end_index + 1], " ")
+                valid = verify_formel(subterm)
     else:
-        pass
+        if arr[-1] != ")":
+            #subterm is not right aligned
+            valid = False
+        else:
+            start_index = 0
+            while True:
+                indices = get_subterm_indices(formel, start=start_index)
+                if indices[1] == -1:
+                    #subterm does not close
+                    valid = False
+                    break
+                if indices[1] != len(arr) - 1:
+                    #this is not the right aligned subterm, set start index to end of this subterm and search again 
+                    start_index = indices[1] + 1
+                else:
+                    start_index = indices[0]
+                    break
+            if valid:
+                subterm = my_join(arr[start_index:], " ")
+                valid = verify_formel(subterm)
+
+    return valid
 
 def get_subterm_indices(formel, start=None):
     """
     |   Returns a tuple with the start and end index of the innermost first subterm after the start index
     |   if there is no subterm or it does not close end index is set to -1
+    |   This method returns indices of the formel.split(" ") array!
     """
     if start == None:
         start = 0
@@ -115,7 +150,7 @@ def get_subterm_indices(formel, start=None):
     arr = formel.split(" ")
 
     #move start to first opening bracket
-    while arr[start] != "(":
+    while start < len(arr) and arr[start] != "(":
         start += 1
     
     end_index = 0
@@ -201,12 +236,12 @@ class tree():
     atomNode_arr = []
 
     def __init__(self, formel):
+        #TODO: create test for this when verify_formel works
         #if not verify_formel(formel):
-        #   raise Exception("Formel is not a valid formel")
+        #   raise Exception("Not a valid formel")
         self.formel = formel
         self.top_node = self.__generate_tree()
     
-    #TODO: more testing would be good
     def __generate_tree(self):
         split_formel_arr = split_formel(self.formel)
 
@@ -234,7 +269,6 @@ class tree():
 
         return node
 
-    #TODO: test this
     #I dont know if it would be better if it would be ok if I only submit the changed atoms
     def update_values(self, value_dict):
         atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=True)
@@ -252,7 +286,6 @@ class tree():
             node = tree.__get_atomNode_by_name(atom_name)
             node.value = new_value
         
-        #TODO: def need to test this
         for negated_atom in [atom for atom in tree.atomNode_arr if atom.negated]:
             new_value = negate(value_dict[negated_atom.name[1:]])
             negated_atom.value = new_value
@@ -266,14 +299,12 @@ class tree():
                 return node
         return None
 
-    #TODO: test this
     def __update_operationNodes(node):
         if isinstance(node, operationNode):
             node.up_to_date_value = False
             tree.__update_operationNodes(node.left_child)
             tree.__update_operationNodes(node.right_child)
         
-    #TODO: test this
     def __get_atom_names(with_negated=True, sort_arr=False):
         atom_names_arr = [atom.name for atom in tree.atomNode_arr]
 
@@ -284,7 +315,6 @@ class tree():
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
     
-    #TODO: this will definitly fail
     def evaluate(self, node):
         if isinstance(node, atomNode):
             return {str(node): node.value}
