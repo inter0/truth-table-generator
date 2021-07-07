@@ -1,3 +1,5 @@
+import warnings
+
 logic_operators = (r"\/", "/\\", "=>", "<=>")
 
 #TODO: description for split_formel
@@ -23,7 +25,8 @@ def split_formel(formel):
         split_formel_arr.append(my_join(arr[2:], " "))
     else:
         #find the end of the subterm which the brackets encloses, which is the left term
-        #assume formel is valid, so I dont have to check if end index of the subterm is -1
+        #assume formel is valid, so I dont have to check if get_subterm_indices returns None
+        #if formel is valid and formel starts with (, which means there has to be a closing bracket
         end_index_of_subterm = get_subterm_indices(formel)[1] + 1
         split_formel_arr.append(my_join(arr[0:end_index_of_subterm], " "))
         split_formel_arr.append(arr[end_index_of_subterm])
@@ -38,14 +41,12 @@ def remove_outer_brackets(formel):
     |   remove the outermost brackets
     |   if the bracket at the first formel position (formel[0]) closes at the end of the formel (formel[-1])
     """
-    bracket = 0
-    end_index = 0
 
     while True:
         arr = formel.split(" ")
         indices = get_subterm_indices(formel)
         #subterm does not close, which means, with the assumption that the formel is valid that all outer brackets are removed
-        if indices[1] == -1:
+        if indices == None:
             break
 
         if indices[0] == 0 and indices[1] == len(arr) - 1:
@@ -82,66 +83,26 @@ def verify_formel(formel):
         return False
 
     #verify atoms and quantors
-    #TODO: subterms before and after a logical operator return false
     for index, f in enumerate(arr):
+        #check that either an atom or an bracket is before and after an logic operator
+        #brackets are correctly placed, so I dont have to check that again
         if f in logic_operators:
-            if index == 0 or index == len(arr):
+            if index == 0 or index == len(arr) - 1:
                 return False
-            if not ((is_atom(arr[index - 1]) or contains_valid_subterm(my_join(arr[:index], " "), False))\
-                 and (is_atom(arr[index + 1]) or contains_valid_subterm(my_join(arr[index + 1:], " "), True))):
+            if arr[index - 1] in logic_operators or arr[index + 1] in logic_operators:
+                return False
+        #check that between every atom is either a logic operator or a bracket
+        elif is_atom(f):
+            if index == 0 or index == len(arr) - 1:
+                continue
+            elif is_atom(arr[index - 1]) or is_atom(arr[index + 1]):
                 return False
     return True
-
-#TODO: this feels bloated
-def contains_valid_subterm(formel, left_aligned):
-    """
-    |   This method checks if the formel contains an aligned valid subterm from start to end
-    |   left_aligned means that the formel must have a valid subterm that starts at formel[start] in order for this method to return true
-    """
-    arr = formel.split(" ")
-    valid = True
-
-    if left_aligned:
-        if arr[0] != "(":
-            #subterm is not left aligned
-            valid = False
-        else:
-            end_index = get_subterm_indices(formel)[1]
-            if end_index == -1:
-                #subterm does not end
-                valid = False
-            else:
-                #check if subterm is valid
-                subterm = my_join(arr[:end_index + 1], " ")
-                valid = verify_formel(subterm)
-    else:
-        if arr[-1] != ")":
-            #subterm is not right aligned
-            valid = False
-        else:
-            start_index = 0
-            while True:
-                indices = get_subterm_indices(formel, start=start_index)
-                if indices[1] == -1:
-                    #subterm does not close
-                    valid = False
-                    break
-                if indices[1] != len(arr) - 1:
-                    #this is not the right aligned subterm, set start index to end of this subterm and search again 
-                    start_index = indices[1] + 1
-                else:
-                    start_index = indices[0]
-                    break
-            if valid:
-                subterm = my_join(arr[start_index:], " ")
-                valid = verify_formel(subterm)
-
-    return valid
 
 def get_subterm_indices(formel, start=None):
     """
     |   Returns a tuple with the start and end index of the innermost first subterm after the start index
-    |   if there is no subterm or it does not close end index is set to -1
+    |   if there is no subterm or it does not close, return None
     |   This method returns indices of the formel.split(" ") array!
     """
     if start == None:
@@ -166,7 +127,7 @@ def get_subterm_indices(formel, start=None):
             break
     
     if end_index == 0:
-        end_index = -1
+        return None
         
     return (start, end_index)
 
@@ -268,20 +229,19 @@ class tree():
 
         return node
 
-    #I dont know if it would be better if it would be ok if I only submit the changed atoms
     def update_values(self, value_dict):
-        atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=True)
-        
-        #check if lengths match
-        if len(value_dict) != len(atom_names_arr):
-            raise Exception("Length of value dictionary is not equal to number of atoms")
-        
-        #check if every atom of the formel tree is in the new values dictionary
-        for atom_name in atom_names_arr:
-            if atom_name not in list(value_dict.keys()):
-                raise Exception("Given dictionary contains atoms that are not in the formel tree")
+        atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=False)
 
+        #check if atom of value_dict is a atom in this tree and if it does assign new value to it
+        #TODO: check if atom exists as negated atom in formel, because non negated atom that only exists as negated in formel gives a warning
         for atom_name, new_value in value_dict.items():
+            if atom_name not in atom_names_arr:
+                warning_msg = f"Atom {atom_name} is not a atom in this tree."
+                if atom_name[0] == "-":
+                    warning_msg += "\nNegated atoms are automaticly set to the negated value of the non negated value of the corresponding node"
+                    warning_msg += "\nIf this atom only exists negated in this formel then you can ignore this warning"
+                warnings.warn(warning_msg)
+                continue
             node = tree.__get_atomNode_by_name(atom_name)
             node.value = new_value
         
@@ -314,6 +274,7 @@ class tree():
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
     
+    #TODO: order of dict is not cool
     def evaluate(self, node):
         if isinstance(node, atomNode):
             return {str(node): node.value}
