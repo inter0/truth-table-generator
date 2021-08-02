@@ -219,8 +219,10 @@ class tree():
         left_subtree = tree(split_formel_arr[0])
         right_subtree = tree(split_formel_arr[2])
         self.atomNode_arr = left_subtree.atomNode_arr + right_subtree.atomNode_arr
-        node.left_subtree = left_subtree
-        node.right_subtree = right_subtree
+        node.left_child = left_subtree.top_node
+        node.right_child = right_subtree.top_node
+        self.left_subtree = left_subtree
+        self.right_subtree = right_subtree
 
         return node
 
@@ -271,17 +273,23 @@ class tree():
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
     
-    #TODO: order of dict is not cool
     def evaluate(self):
+        evaluated_dict = self.__evaluate_tree()
+        sorted_dict = {key: value for key, value in sorted(evaluated_dict.items(), key= lambda item: len(item[0]))}
+
+        return sorted_dict
+
+    def __evaluate_tree(self):
         #evaluate actually recursivly evaluates all operationNodes via get_value
         if isinstance(self.top_node, atomNode):
             return {str(self.top_node): self.top_node.get_value()}
         
         dict = {}
         operation_dict = {str(self.top_node): self.top_node.get_value()}
-        dict_of_left_child = self.top_node.evaluate()
-        dict_of_right_child = self.top_node.evaluate()
+        dict_of_left_child = self.left_subtree.__evaluate_tree()
+        dict_of_right_child = self.right_subtree.__evaluate_tree()
 
+        #update dict merges duplicate nodes together
         dict.update(dict_of_left_child)
         dict.update(dict_of_right_child)
         dict.update(operation_dict)

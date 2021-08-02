@@ -88,10 +88,10 @@ class testTree(unittest.TestCase):
         self.assertEqual(0, len(nodes_arr), f"Tree {formel3} has to many nodes: {nodes_arr}")
 
         top_node = t3.top_node
-        l_node = top_node.left_child
-        r_node = top_node.right_child
-        rl_node = r_node.left_child
-        rr_node = r_node.right_child
+        l_node = t3.left_subtree.top_node
+        r_node = t3.right_subtree.top_node
+        rl_node = t3.right_subtree.left_subtree.top_node
+        rr_node = t3.right_subtree.right_subtree.top_node
 
         #test if nodes have the right type
         self.assertTrue(isinstance(top_node, ft.operationNode))
@@ -126,16 +126,16 @@ class testTree(unittest.TestCase):
 
         #just draw the tree to verify this
         top_node = t1.top_node
-        l_node = top_node.left_child
-        r_node = top_node.right_child
-        rr_node = r_node.right_child
-        rl_node = r_node.left_child
-        rll_node = rl_node.left_child
-        rlr_node = rl_node.right_child
-        rlll_node = rll_node.left_child
-        rllr_node = rll_node.right_child
-        rlrl_node = rlr_node.left_child
-        rlrr_node = rlr_node.right_child
+        l_node = t1.left_subtree.top_node
+        r_node = t1.right_subtree.top_node
+        rr_node = t1.right_subtree.right_subtree.top_node
+        rl_node = t1.right_subtree.left_subtree.top_node
+        rll_node = t1.right_subtree.left_subtree.left_subtree.top_node
+        rlr_node = t1.right_subtree.left_subtree.right_subtree.top_node
+        rlll_node = t1.right_subtree.left_subtree.left_subtree.left_subtree.top_node
+        rllr_node = t1.right_subtree.left_subtree.left_subtree.right_subtree.top_node
+        rlrl_node = t1.right_subtree.left_subtree.right_subtree.left_subtree.top_node
+        rlrr_node = t1.right_subtree.left_subtree.right_subtree.right_subtree.top_node
 
         #test if nodes have the right type
         self.assertTrue(isinstance(top_node, ft.operationNode))
@@ -226,11 +226,35 @@ class testTree(unittest.TestCase):
     def test_evaluate(self):
         #a => ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c )
         t1 = ft.tree(formel1)
+
         evaluated_t1 = t1.evaluate()
-        print(evaluated_t1)
+        expected_dict = {"a": 0, "b": 0, "d": 0, "c": 0, "-c": 1, "( a \/ b )": 0, "( -c /\\ d )": 0,
+                         "( ( a \/ b ) <=> ( -c /\\ d ) )": 1, "( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1,
+                         "( a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c ) )": 1}
+        self.assertEqual(evaluated_t1, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
+
         t1.update_values({"a": 1, "b": 0, "c": 1, "d": 1})
-        print(evaluated_t1)
-        input()
+        evaluated_t1 = t1.evaluate()
+        expected_dict = {"a": 1, "b": 0, "d": 1, "c": 1, "-c": 0, "( a \/ b )": 1, "( -c /\\ d )": 0,
+                         "( ( a \/ b ) <=> ( -c /\\ d ) )": 0, "( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1,
+                         "( a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c ) )": 1}
+        self.assertEqual(evaluated_t1, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
+
+        #( -a => b ) \/ ( b <=> c )
+        t6 = ft.tree(formel6)
+        expected_dict = {"b": 0, "c": 0, "-a": 1, "( b <=> c )": 1, "( -a => b )": 0, "( ( -a => b ) \/ ( b <=> c ) )": 1}
+        evaluated_t6 = t6.evaluate()
+        self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
+
+        t6.update_values({"b": 1, "c": 1, "a": 1})
+        expected_dict = {"b": 1, "c": 1, "-a": 0, "( b <=> c )": 1, "( -a => b )": 1, "( ( -a => b ) \/ ( b <=> c ) )": 1}
+        evaluated_t6 = t6.evaluate()
+        self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
+        
+        t6.update_values({"b": 0, "a": 0})
+        expected_dict = {"b": 0, "c": 1, "-a": 1, "( b <=> c )": 0, "( -a => b )": 0, "( ( -a => b ) \/ ( b <=> c ) )": 0}
+        evaluated_t6 = t6.evaluate()
+        self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
 
 
 if __name__ == "__main__":
