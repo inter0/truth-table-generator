@@ -77,7 +77,15 @@ class testTree(unittest.TestCase):
         self.assertRaises(Exception, ft.tree, formel7)
         self.assertRaises(Exception, ft.tree, formel4)
 
+        #a \/ b /\ c
         t3 = ft.tree(formel3)
+        nodes_arr = [node.name for node in t3.atomNode_arr]
+
+        nodes_arr.remove("a")
+        nodes_arr.remove("b")
+        nodes_arr.remove("c")
+
+        self.assertEqual(0, len(nodes_arr), f"Tree {formel3} has to many nodes: {nodes_arr}")
 
         top_node = t3.top_node
         l_node = top_node.left_child
@@ -103,7 +111,18 @@ class testTree(unittest.TestCase):
         self.assertEqual(rr_node.name, "c")
         self.assertEqual(rr_node.value, 0)
 
+        #a => ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c )
         t1 = ft.tree(formel1)
+        nodes_arr = [node.name for node in t1.atomNode_arr]
+
+        nodes_arr.remove("a")
+        nodes_arr.remove("a")
+        nodes_arr.remove("b")
+        nodes_arr.remove("c")
+        nodes_arr.remove("d")
+        nodes_arr.remove("-c")
+
+        self.assertEqual(0, len(nodes_arr), f"Tree {formel1} has too many nodes: {nodes_arr}")
 
         #just draw the tree to verify this
         top_node = t1.top_node
@@ -148,11 +167,11 @@ class testTree(unittest.TestCase):
         self.assertEqual(rllr_node.name, "b")
         self.assertEqual(rllr_node.value, 0)
         self.assertEqual(rlrl_node.name, "-c")
-        self.assertEqual(rlrl_node.value, 0)
+        self.assertEqual(rlrl_node.value, 1)
         self.assertEqual(rlrr_node.name, "d")
         self.assertEqual(rlrr_node.value, 0)
 
-        self.assertEqual(l_node, rlll_node)
+        # self.assertEqual(l_node, rlll_node)
         self.assertNotEqual(rlrl_node, rr_node)
         self.assertTrue(rlrl_node.negated)
         self.assertFalse(rlrr_node.negated)
@@ -168,17 +187,15 @@ class testTree(unittest.TestCase):
         indices3 = ft.get_subterm_indices(formel3)
         self.assertIsNone(indices3)
 
-    def test_atomNodeArr(self):
-        t1_atoms = [node.name for node in ft.tree(formel1).atomNode_arr]
-        self.assertTrue("a" in t1_atoms)
-        self.assertTrue("b" in t1_atoms)
-        self.assertTrue("c" in t1_atoms)
-        self.assertTrue("-c" in t1_atoms)
-        self.assertTrue("d" in t1_atoms)
-
     def test_updateValues(self):
         #formel2 = ( ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c ) )
         t2 = ft.tree(formel2)
+        for node in t2.atomNode_arr:
+            if node.negated:
+                self.assertEqual(node.value, 1)
+            else:
+                self.assertEqual(node.value, 0)
+
         value_dict = {"a": 1, "b": 1, "c": 1, "d": 1}
         t2.update_values(value_dict)
         for node in t2.atomNode_arr:
@@ -190,42 +207,30 @@ class testTree(unittest.TestCase):
         value_dict = {"a": 0, "c": 0, "d": 1}
         t2.update_values(value_dict)
         for node in t2.atomNode_arr:
-            if node.name == "a":
-                self.assertEqual(node.value, 0)
-            elif node.name == "b":
-                self.assertEqual(node.value, 1)
-            elif node.name == "d":
-                self.assertEqual(node.value, 1)
+            if node.name == "a" or node.name == "c":
+                self.assertEqual(node.value, 0, f"{node.name} has wrong value")
+            elif node.name == "b" or node.name == "d":
+                self.assertEqual(node.value, 1, f"{node.name} has wrong value")
             elif node.negated:
-                self.assertEqual(node.value, 1)
+                self.assertEqual(node.value, 1, f"{node.name} has wrong value")
 
         #formel6 = ( -a => b ) \/ ( b <=> c )
-        #TODO: remove these prints
         t6 = ft.tree(formel6)
-        print(t6.formel)
-        print([node.name for node in t6.atomNode_arr])
-        input()
-        new_values = {"a": 0, "b": 1, "c": 1, "d": 1}
+        new_values = {"a": 0, "b": 1, "c": 1, "d": 1, "-a": 0}
         #i dont know how assertWarning works, but atom d in new_values should throw a warning
         #self.assertWarns(warnings.warn("Atom a is not a atom in this tree"), t6.update_values, new_values)
         t6.update_values(new_values)
         for node in t6.atomNode_arr:
-            if node.negated:
-                self.assertEqual(node.value, 1)
-            else:
-                self.assertEqual(node.value, 1, f"{node.name}")
-
-    def test_getAtomNodeByName(self):
-        pass
-
-    def test_updateOperationNode(self):
-        pass
-
-    def test_getAtomNames(self):
-        pass
+            self.assertEqual(node.value, 1)
 
     def test_evaluate(self):
-        pass
+        #a => ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c )
+        t1 = ft.tree(formel1)
+        evaluated_t1 = t1.evaluate()
+        print(evaluated_t1)
+        t1.update_values({"a": 1, "b": 0, "c": 1, "d": 1})
+        print(evaluated_t1)
+        input()
 
 
 if __name__ == "__main__":

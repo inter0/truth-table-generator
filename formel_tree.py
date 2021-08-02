@@ -194,43 +194,38 @@ class atomNode():
 
 class tree():
     functions = [my_or, my_and, implies, equivalence, negate]
-    atomNode_arr = []
 
     def __init__(self, formel):
         if not verify_formel(formel):
            raise Exception("Not a valid formel")
         self.formel = formel
+        self.atomNode_arr = []
         self.top_node = self.__generate_tree()
-    
+
     def __generate_tree(self):
         split_formel_arr = split_formel(self.formel)
 
         #if formel cant be split more, this is an atom
         if split_formel_arr == None:
-            node = None
-            atomNodes_names_arr = tree.__get_atom_names(with_negated=True, sort_arr=False)
             negated = True if self.formel[0] == "-" else False
-
-            #check if atom already exists, if it does return already existing atom otherwise create new atomNode
-            if self.formel in atomNodes_names_arr:
-                index = atomNodes_names_arr.index(self.formel)
-                node = tree.atomNode_arr[index]
-            else:
-                node = atomNode(self.formel, 0, negated)
-                tree.atomNode_arr.append(node)
-            
+            value = 1 if negated else 0
+            node = atomNode(self.formel, value, negated)
+            self.atomNode_arr.append(node)
             return node
 
         #create new operationNode and recursively build tree
         #set childs of this operationNode
         node = operationNode(split_formel_arr[1], tree.functions[logic_operators.index(split_formel_arr[1])])
-        node.left_child = tree(split_formel_arr[0]).top_node
-        node.right_child = tree(split_formel_arr[2]).top_node
+        left_subtree = tree(split_formel_arr[0])
+        right_subtree = tree(split_formel_arr[2])
+        self.atomNode_arr = left_subtree.atomNode_arr + right_subtree.atomNode_arr
+        node.left_subtree = left_subtree
+        node.right_subtree = right_subtree
 
         return node
 
     def update_values(self, value_dict):
-        atom_names_arr = tree.__get_atom_names(with_negated=False, sort_arr=False)
+        atom_names_arr = self.__get_atom_names(with_negated=False, sort_arr=False)
 
         #check if atom of value_dict is a atom in this tree and if it does assign new value to it
         #TODO: check if atom exists as negated atom in formel, because non negated atom that only exists as negated in formel gives a warning
@@ -242,48 +237,53 @@ class tree():
                     warning_msg += "\nIf this atom only exists negated in this formel then you can ignore this warning"
                 warnings.warn(warning_msg)
                 continue
-            node = tree.__get_atomNode_by_name(atom_name)
-            node.value = new_value
+            nodes = self.__get_atomNodes_by_name(atom_name)
+            for node in nodes:
+                node.value = new_value
         
-        for negated_atom in [atom for atom in tree.atomNode_arr if atom.negated]:
+        for negated_atom in [atom for atom in self.atomNode_arr if atom.negated]:
             new_value = negate(value_dict[negated_atom.name[1:]])
             negated_atom.value = new_value
 
         #update operationNodes up_to_date_value to False
-        tree.__update_operationNodes(self.top_node)
+        self.__update_operationNodes()
 
-    def __get_atomNode_by_name(name):
-        for node in tree.atomNode_arr:
+    def __get_atomNodes_by_name(self, name):
+        node_arr = []
+        for node in self.atomNode_arr:
             if node.name == name:
-                return node
-        return None
+                node_arr.append(node)
+        return node_arr
 
-    def __update_operationNodes(node):
-        if isinstance(node, operationNode):
-            node.up_to_date_value = False
-            tree.__update_operationNodes(node.left_child)
-            tree.__update_operationNodes(node.right_child)
+    def __update_operationNodes(self):
+        if isinstance(self.top_node, operationNode):
+            self.top_node.up_to_date_value = False
+            self.left_subtree.__update_operationNodes()
+            self.right_subtree.__update_operationNodes()
         
-    def __get_atom_names(with_negated=True, sort_arr=False):
-        atom_names_arr = [atom.name for atom in tree.atomNode_arr]
+    def __get_atom_names(self, with_negated=True, sort_arr=False):
+        atom_names_arr = [atom.name for atom in self.atomNode_arr]
 
         if not with_negated:
-            for atom in tree.atomNode_arr:
+            for atom in self.atomNode_arr:
                 if atom.negated:
                     atom_names_arr.remove(atom.name)
             
         return atom_names_arr if not sort_arr else sorted(atom_names_arr)
     
     #TODO: order of dict is not cool
-    def evaluate(self, node):
-        if isinstance(node, atomNode):
-            return {str(node): node.value}
+    def evaluate(self):
+        #evaluate actually recursivly evaluates all operationNodes via get_value
+        if isinstance(self.top_node, atomNode):
+            return {str(self.top_node): self.top_node.get_value()}
         
-        dict = {str(node): node.value}
-        dict_of_left_child = self.evaluate(node.left_child)
-        dict_of_right_child = self.evaluate(node.right_child)
+        dict = {}
+        operation_dict = {str(self.top_node): self.top_node.get_value()}
+        dict_of_left_child = self.top_node.evaluate()
+        dict_of_right_child = self.top_node.evaluate()
 
-        dict_of_left_child.update(dict_of_right_child)
-        dict_of_left_child.update(dict)
+        dict.update(dict_of_left_child)
+        dict.update(dict_of_right_child)
+        dict.update(operation_dict)
 
-        return dict_of_left_child
+        return dict
