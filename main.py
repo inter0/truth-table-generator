@@ -1,6 +1,7 @@
 from pylatex import Document
 from pylatex.utils import NoEscape
 import argparse
+import formel_tree as ft
 
 def main(in_file, doc):
     variables = {}
@@ -13,13 +14,19 @@ def main(in_file, doc):
         print(f"Error opening/reading the input file: {e}")
         exit()
 
+    tree = ft.tree(formular)
+
     for var in formular.split(" "):
         if var not in logic_operators:
             var = var.replace("-", "")
             variables.update({var: 0})
 
-    init_table(doc, len(variables))
-    table_write_line(doc, list(variables.keys()))
+    evaluation = tree.evaluate()
+
+    init_table(doc, len(variables) + len(evaluation))
+    table_write_line(doc, list(variables.keys()) + list(evaluation.keys()))
+
+    return
 
     for i in range(2**len(variables)):
         if i == 0:
