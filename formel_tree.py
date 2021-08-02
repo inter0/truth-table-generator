@@ -282,8 +282,11 @@ class tree():
     def __evaluate_tree(self):
         #evaluate actually recursivly evaluates all operationNodes via get_value
         if isinstance(self.top_node, atomNode):
-            return {str(self.top_node): self.top_node.get_value()}
-        
+            atomDict = {}
+            if self.top_node.negated:
+                atomDict = {str(self.top_node): self.top_node.get_value()}
+            return atomDict
+
         dict = {}
         operation_dict = {str(self.top_node): self.top_node.get_value()}
         dict_of_left_child = self.left_subtree.__evaluate_tree()
