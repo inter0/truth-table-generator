@@ -3,6 +3,21 @@ from pylatex.utils import NoEscape
 import argparse
 import formel_tree as ft
 
+
+def models(vars):
+    """
+    This function iterates over every model of this formel,
+    it yields an array of the new values and updates the vars dictionary
+    """
+    for i in range(2**len(vars)):
+        bin_str = bin(i)[2:]
+        if len(bin_str) < len(vars):
+            bin_str = "0"*(len(vars) - len(bin_str)) + bin_str
+        new_values = [int(t) for t in bin_str]
+        for value, var in zip(new_values, vars):
+            vars[var] = value
+        yield new_values
+
 def main(in_file, doc):
     variables = {}
     logic_operators = (r"\/", "/\\", "=>", "<=>", "(", ")")
@@ -14,36 +29,20 @@ def main(in_file, doc):
         print(f"Error opening/reading the input file: {e}")
         exit()
 
-    tree = ft.tree(formular)
-
     for var in formular.split(" "):
         if var not in logic_operators:
             var = var.replace("-", "")
             variables.update({var: 0})
 
-    evaluation = tree.evaluate()
+    init_table(doc, len(variables))
+    #with \\land /\ and \\lor \/
 
-    init_table(doc, len(variables) + len(evaluation))
-    table_write_line(doc, list(variables.keys()) + list(evaluation.keys()))
-
-    return
-
-    for i in range(2**len(variables)):
-        if i == 0:
-            table_write_line(doc, list(variables.values()))
-            continue
-        index = 0
-        for key, value in variables.items():
-            rythm = 2**(len(variables)-index-1)
-            index += 1
-            if i % rythm == 0:
-                value ^= 1
-                variables.update({key: value})
-        if i == 2**len(variables) - 1:
-            table_write_line(doc, list(variables.values()), True)
-            continue
-        table_write_line(doc, list(variables.values()))
-
+    for model in models(variables):
+        #models should return an dic with the updated values for the variables
+        #so just updated values in the tree
+        #evaluate
+        #write line to doc
+        pass
 
 def init_table(doc, size):
     center = "|".join(["c"]*size)
@@ -52,9 +51,12 @@ def init_table(doc, size):
 
 def table_write_line(doc, arr, last_line=False):
     arg_str = ""
+    #if we write values to the table
     if not isinstance(arr[0], str):
         arg_str = " & ".join(map(str, arr))
     else:
+        #if we write atoms and subformules
+        #just put a & between every element of arr
         arg_str = " & ".join(arr)
     line = arg_str + r"\\"
 
