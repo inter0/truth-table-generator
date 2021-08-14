@@ -6,11 +6,7 @@ You need to have LaTeX and perl installed. `pip install -r requirements.txt` wil
 `python ttg.py [-k] logic.txt output.pdf` will read the propositional calculus from the first positional argument logic.txt, evaluates it, creates a LaTeX table and generates a pdf out of it. The second positional argument is the name of the pdf file. With the -k keyword argument, you keep the generated .tex file. 
 ### logic.txt
 This is the file that contains the propostional calculus. You can name this file however you like but it is important that you have a space between every proposition like /\\, a, -b, etc and brackets. 
-* Or: $\lor$ is \\/
-* And: $\land$ is /\
-* Implies: $\implies$ is =>
-* Equivalence: $\iff$ is <=>
-* Negation: $\neg a$ is -a
+![alt text](https://github.com/inter0/truth-table-generator/blob/main/readme/transparent_list.png)
 For example ( -a => b ) \\/ ( b <=> c ) will evaluate as
 $$
     (\neg a \implies b) \lor (b \iff c)
