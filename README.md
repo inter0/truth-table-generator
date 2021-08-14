@@ -16,6 +16,6 @@ This program will evaluate negation first, then propositions between brackets an
 __Note that the evaluation order is not automaticly left to right__ 
 a /\\ b \\/ c will evaluate as a /\\ ( b \\/ c ). If you want to make sure the evaluation order is correct, use brackets.
 # Output
-a => ( ( ( a \/ b ) <=> ( -c /\ d ) ) \/ c ) will generate the table below
+a => ( ( ( a \\/ b ) <=> ( -c /\ d ) ) \\/ c ) will generate the table below
 
 ![alt resulting table](https://github.com/inter0/truth-table-generator/blob/main/readme/result.png)
