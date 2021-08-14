@@ -15,6 +15,17 @@ This is the file that contains the propostional calculus. You can name this file
 This program will evaluate negation first, then propositions between brackets and then the rest.
 __Note that the evaluation order is not automaticly left to right__ 
 a /\\ b \\/ c will evaluate as a /\\ ( b \\/ c ). If you want to make sure the evaluation order is correct, use brackets.
+
+## Structure
+### ttg.py
+This is the main file, it reads the logic file, iterates over all models and generates the pdf.
+
+### formel_tree.py
+formel_tree contains the class tree, atomNode and operationNode and some helper functions. The tree class recursivly creates a binary tree out of the formel and evaluates the result of the formel applied to a model. The nodes of the tree are either a atomNode or a operationNode.
+
+### test_tree.py
+This is just a unit test file to test the formel_tree.
+
 ## Output
 a => ( ( ( a \\/ b ) <=> ( -c /\ d ) ) \\/ c ) will generate the table below
 

@@ -300,4 +300,4 @@ class tree():
         dict.update(dict_of_right_child)
         dict.update(operation_dict)
 
-        return dict
+        return dict        
