@@ -83,6 +83,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("input", help="The file with the logic you want the truth table for", type=str)
     p.add_argument("output", help="The filename were you want to save the pdf with the truth table", type=str)
+    p.add_argument("-k", "--keep-tex", help="Keep the .tex file after the pdf got created", default=True, action="store_false")
     args = p.parse_args()
 
     geometry_options = {"lmargin": "0.5cm", "tmargin": "2cm"}
@@ -93,4 +94,4 @@ if __name__ == "__main__":
     main(args.input, doc)
 
     end_table(doc)
-    doc.generate_pdf(clean_tex=False)
+    doc.generate_pdf(clean_tex=args.keep_tex)
