@@ -19,3 +19,7 @@ a /\\ b \\/ c will evaluate as a /\\ ( b \\/ c ). If you want to make sure the e
 a => ( ( ( a \\/ b ) <=> ( -c /\ d ) ) \\/ c ) will generate the table below
 
 ![alt resulting table](https://github.com/inter0/truth-table-generator/blob/main/readme/result.png)
+
+# Issues
+- [ ] If the formel is too large the table wont fit on the page
+- [ ] Evaluation order is not left to right
