@@ -1,9 +1,8 @@
 from pylatex import Document
+from pylatex.package import Package
 from pylatex.utils import NoEscape
 import argparse
 import formel_tree as ft
-
-#TODO: include math to use implies, remove margin from sides
 
 def models(vars):
     """
@@ -67,7 +66,7 @@ def table_write_line(doc, arr, last_line=False):
             ele = ele.replace(" /\\ ", " \\land ")
             ele = ele.replace(" \\/ ", " \\lor ")
             #implies requires to use a math package and i dont know how to include it
-            ele = ele.replace(" => ", " \\Rightarrow ")
+            ele = ele.replace(" => ", " \\implies ")
             ele = ele.replace(" <=> ", " \\iff ")
             arr[index] = "$" + ele + "$"
         arg_str = " & ".join(arr)
@@ -86,9 +85,12 @@ if __name__ == "__main__":
     p.add_argument("output", help="The filename were you want to save the pdf with the truth table", type=str)
     args = p.parse_args()
 
-    doc = Document(args.output.replace(".pdf", ""))
+    geometry_options = {"lmargin": "0.5cm", "tmargin": "2cm"}
+
+    doc = Document(default_filepath=args.output.replace(".pdf", ""), indent=False, page_numbers=False, geometry_options=geometry_options)
+    doc.packages.append(Package("amsmath"))
 
     main(args.input, doc)
 
     end_table(doc)
-    doc.generate_pdf()
+    doc.generate_pdf(clean_tex=False)

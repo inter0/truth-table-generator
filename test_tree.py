@@ -228,31 +228,31 @@ class testTree(unittest.TestCase):
         t1 = ft.tree(formel1)
 
         evaluated_t1 = t1.evaluate()
-        expected_dict = {"-c": 1, "( a \/ b )": 0, "( -c /\\ d )": 0,
-                         "( ( a \/ b ) <=> ( -c /\\ d ) )": 1, "( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1,
-                         "( a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c ) )": 1}
+        expected_dict = {"-c": 1, "a \/ b": 0, "-c /\\ d": 0,
+                         "( a \/ b ) <=> ( -c /\\ d )": 1, "( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c": 1,
+                         "a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1}
         self.assertEqual(evaluated_t1, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
 
         t1.update_values({"a": 1, "b": 0, "c": 1, "d": 1})
         evaluated_t1 = t1.evaluate()
-        expected_dict = {"-c": 0, "( a \/ b )": 1, "( -c /\\ d )": 0,
-                         "( ( a \/ b ) <=> ( -c /\\ d ) )": 0, "( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1,
-                         "( a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c ) )": 1}
+        expected_dict = {"-c": 0, "a \/ b": 1, "-c /\\ d": 0,
+                         "( a \/ b ) <=> ( -c /\\ d )": 0, "( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c": 1,
+                         "a => ( ( ( a \/ b ) <=> ( -c /\\ d ) ) \/ c )": 1}
         self.assertEqual(evaluated_t1, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
 
         #( -a => b ) \/ ( b <=> c )
         t6 = ft.tree(formel6)
-        expected_dict = {"-a": 1, "( b <=> c )": 1, "( -a => b )": 0, "( ( -a => b ) \/ ( b <=> c ) )": 1}
+        expected_dict = {"-a": 1, "b <=> c": 1, "-a => b": 0, "( -a => b ) \/ ( b <=> c )": 1}
         evaluated_t6 = t6.evaluate()
         self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
 
         t6.update_values({"b": 1, "c": 1, "a": 1})
-        expected_dict = {"-a": 0, "( b <=> c )": 1, "( -a => b )": 1, "( ( -a => b ) \/ ( b <=> c ) )": 1}
+        expected_dict = {"-a": 0, "b <=> c": 1, "-a => b": 1, "( -a => b ) \/ ( b <=> c )": 1}
         evaluated_t6 = t6.evaluate()
         self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
         
         t6.update_values({"b": 0, "a": 0})
-        expected_dict = {"-a": 1, "( b <=> c )": 0, "( -a => b )": 0, "( ( -a => b ) \/ ( b <=> c ) )": 0}
+        expected_dict = {"-a": 1, "b <=> c": 0, "-a => b": 0, "( -a => b ) \/ ( b <=> c )": 0}
         evaluated_t6 = t6.evaluate()
         self.assertEqual(evaluated_t6, expected_dict, f"Actual: {evaluated_t1}\nExpected: {expected_dict}")
 

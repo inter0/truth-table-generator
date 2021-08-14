@@ -276,8 +276,11 @@ class tree():
     def evaluate(self):
         evaluated_dict = self.__evaluate_tree()
         sorted_dict = {key: value for key, value in sorted(evaluated_dict.items(), key= lambda item: len(item[0]))}
+        removed_brackets = []
+        for key in sorted_dict.keys():
+            removed_brackets.append(remove_outer_brackets(key))
 
-        return sorted_dict
+        return dict(zip(removed_brackets, list(sorted_dict.values())))
 
     def __evaluate_tree(self):
         #evaluate actually recursivly evaluates all operationNodes via get_value
