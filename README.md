@@ -34,3 +34,4 @@ a => ( ( ( a \\/ b ) <=> ( -c /\ d ) ) \\/ c ) will generate the table below
 ## Issues
 - [ ] If the formel is too large the table wont fit on the page
 - [ ] Evaluation order is not left to right
+- [ ] You cant negate subterms like -( A => B )
